@@ -1,8 +1,10 @@
 import { useEffect, useRef } from 'react'
-import { useLocation } from 'react-router-dom'
-import { Search, Bell, Command } from 'lucide-react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { Search, Bell, Command, LogOut } from 'lucide-react'
 import { useAppStore } from '../../store/useAppStore'
 import { getInitials } from '../../lib/utils'
+import { supabase } from '../../lib/supabase'
+import { toast } from '../../store/useToastStore'
 
 const PAGE_TITLES: Record<string, string> = {
   '/': 'Dashboard',
@@ -15,7 +17,8 @@ const PAGE_TITLES: Record<string, string> = {
 
 export function Topbar() {
   const location = useLocation()
-  const { currentUser } = useAppStore()
+  const navigate = useNavigate()
+  const { currentUser, setCurrentUser } = useAppStore()
   const searchRef = useRef<HTMLInputElement>(null)
   const currentTitle = PAGE_TITLES[location.pathname] || 'Vingrity'
 
@@ -30,9 +33,19 @@ export function Topbar() {
     return () => document.removeEventListener('keydown', down)
   }, [])
 
+  async function handleSignOut() {
+    try {
+      await supabase.auth.signOut()
+      setCurrentUser(null)
+      toast({ type: 'info', title: 'Signed out' })
+      navigate('/login')
+    } catch (err: any) {
+      console.error(err)
+    }
+  }
+
   return (
     <header className="h-24 px-10 flex items-center justify-between gap-8 mt-2">
-      
       {/* TITLE */}
       <div className="shrink-0">
         <h1 className="text-3xl font-bold text-[#202060] tracking-tight">
@@ -41,7 +54,7 @@ export function Topbar() {
         <p className="text-[10px] font-bold text-[#00adee] uppercase tracking-[0.2em] mt-1">Vingrity Enterprise</p>
       </div>
 
-      {/* ORGANIC SEARCH */}
+      {/* SEARCH */}
       <div className="flex-1 max-w-2xl relative group">
         <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#0071fe] transition-colors">
           <Search size={20} />
@@ -59,27 +72,37 @@ export function Topbar() {
       </div>
 
       {/* ACTIONS */}
-      <div className="flex items-center gap-6">
-        <button className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-gray-400 hover:text-[#0071fe] hover:shadow-lg hover:shadow-blue-500/10 transition-all relative">
+      <div className="flex items-center gap-4">
+        <button 
+          title="Notifications"
+          className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-gray-400 hover:text-[#0071fe] hover:shadow-lg hover:shadow-blue-500/10 transition-all relative"
+        >
           <Bell size={22} />
           <div className="absolute top-3 right-3 w-2 h-2 bg-[#fa0202] rounded-full border-2 border-white" />
         </button>
 
-        {/* PROFILE */}
+        {/* PROFILE & LOGOUT */}
         <div className="flex items-center gap-4 pl-4 border-l border-gray-100">
           <div className="text-right hidden sm:block">
             <p className="text-sm font-bold text-[#202060] leading-none">
               {currentUser?.full_name || 'Estimator'}
             </p>
             <p className="text-[10px] font-black text-[#00adee] uppercase tracking-widest mt-1.5">
-              {currentUser?.role || 'Global Admin'}
+              {currentUser?.role || 'Member'}
             </p>
           </div>
-          <div className="w-14 h-14 rounded-[22px] bg-white p-1 border border-gray-100 shadow-sm cursor-pointer hover:scale-105 transition-all">
-             <div className="w-full h-full bg-gradient-to-br from-[#0071fe] to-[#202060] rounded-[18px] flex items-center justify-center text-white text-sm font-bold tracking-tighter">
-               {currentUser ? getInitials(currentUser.full_name) : 'AV'}
+          <div className="w-12 h-12 rounded-[18px] bg-white p-1 border border-gray-100 shadow-sm">
+             <div className="w-full h-full bg-gradient-to-br from-[#0071fe] to-[#202060] rounded-[14px] flex items-center justify-center text-white text-xs font-bold tracking-tighter">
+               {currentUser?.initials || (currentUser?.full_name ? getInitials(currentUser.full_name) : 'VG')}
              </div>
           </div>
+          <button
+            onClick={handleSignOut}
+            title="Sign Out"
+            className="w-10 h-10 rounded-2xl bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-[#fa0202] hover:bg-red-50 hover:border-red-100 transition-all shadow-sm"
+          >
+            <LogOut size={16} />
+          </button>
         </div>
       </div>
     </header>

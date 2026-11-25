@@ -6,26 +6,15 @@ interface AppStore {
   toggleSidebar: () => void
   currentUser: Profile | null
   setCurrentUser: (p: Profile | null) => void
-}
-
-// For now, a local mock "current user" until Supabase Auth is wired up.
-// Replace with a real auth-derived profile once you enable Supabase Auth (see README).
-const MOCK_USER: Profile = {
-  id: 'local-user',
-  full_name: 'Prathikson Jeyakumar',
-  initials: 'PJ',
-  email: 'dispatch@vingrity.com',
-  phone: '780-667-4895',
-  role: 'admin',
-  status: 'active',
-  created_at: new Date().toISOString(),
+  isAuthLoading: boolean
+  setIsAuthLoading: (loading: boolean) => void
 }
 
 export const useAppStore = create<AppStore>((set) => ({
   sidebarCollapsed: false,
   toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
-  currentUser: MOCK_USER,
+  currentUser: null,
   setCurrentUser: (p) => set({ currentUser: p }),
+  isAuthLoading: true,
+  setIsAuthLoading: (loading) => set({ isAuthLoading: loading }),
 }))
-
-

@@ -11,14 +11,14 @@ import {
   Mail,
   Phone,
   MapPin,
-  ExternalLink
+  FileSpreadsheet
 } from 'lucide-react'
 import { useClients, useCreateClient, useUpdateClient, useDeleteClient } from '../hooks/useClients'
 import { ClientFormModal } from '../components/Clients/ClientFormModal'
+import { ExportRateSheetModal } from '../components/Clients/ExportRateSheetModal'
 import { Client } from '../types'
-import { format } from 'date-fns'
 
-// Helper for Clipboard Actions (Integrated Stone Style)
+// Helper for Clipboard Actions
 function CopyButton({ value }: { value: string }) {
   const [copied, setCopied] = useState(false)
 
@@ -51,6 +51,10 @@ export function ClientsPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Client | null>(null)
 
+  // Rate Sheet Exporter state
+  const [rateSheetModalOpen, setRateSheetModalOpen] = useState(false)
+  const [selectedForRateSheet, setSelectedForRateSheet] = useState<Client | null>(null)
+
   const filtered = useMemo(() => {
     const term = search.toLowerCase()
     if (!term) return clients
@@ -76,6 +80,11 @@ export function ClientsPage() {
   function closeModal() {
     setModalOpen(false)
     setEditing(null)
+  }
+
+  function openRateSheetExport(c?: Client) {
+    setSelectedForRateSheet(c || null)
+    setRateSheetModalOpen(true)
   }
 
   return (
@@ -115,13 +124,24 @@ export function ClientsPage() {
             />
           </div>
           
-          <button 
-            onClick={() => setModalOpen(true)} 
-            className="flex items-center justify-center gap-2 px-8 py-3 rounded-2xl bg-[#0071fe] text-white text-sm font-bold shadow-lg shadow-blue-500/20 hover:bg-[#202060] transition-all"
-          >
-            <Plus size={18} />
-            <span>Add New Entity</span>
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => openRateSheetExport()}
+              className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-white border border-gray-200 text-[#202060] text-sm font-bold hover:bg-gray-50 transition-all shadow-sm"
+              title="Download standalone client proposal ratesheet"
+            >
+              <FileSpreadsheet size={17} className="text-[#0071fe]" />
+              <span>Download Rate Sheet</span>
+            </button>
+
+            <button 
+              onClick={() => setModalOpen(true)} 
+              className="flex items-center justify-center gap-2 px-8 py-3 rounded-2xl bg-[#0071fe] text-white text-sm font-bold shadow-lg shadow-blue-500/20 hover:bg-[#202060] transition-all"
+            >
+              <Plus size={18} />
+              <span>Add New Entity</span>
+            </button>
+          </div>
         </div>
 
         {/* 3. TABLE MODULE */}
@@ -193,6 +213,15 @@ export function ClientsPage() {
                       {/* Actions */}
                       <td className="px-8 py-6 text-right">
                         <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                          {/* Dedicated Rate Sheet PDF Button */}
+                          <button
+                            onClick={() => openRateSheetExport(c)}
+                            className="p-2 rounded-xl bg-white border border-gray-100 text-[#0071fe] hover:bg-blue-50 hover:shadow-md transition-all"
+                            title="Export Rate Sheet Proposal PDF"
+                          >
+                            <FileSpreadsheet size={16} />
+                          </button>
+
                           <button
                             onClick={() => { setEditing(c); setModalOpen(true); }}
                             className="p-2 rounded-xl bg-white border border-gray-100 text-[#202060] hover:text-[#0071fe] hover:shadow-md transition-all"
@@ -208,7 +237,11 @@ export function ClientsPage() {
                             <Trash2 size={16} />
                           </button>
                           <div className="w-px h-4 bg-gray-100 mx-1" />
-                          <button className="p-2 rounded-xl bg-[#F8FAFC] text-[#202060] hover:bg-[#202060] hover:text-white transition-all">
+                          <button 
+                            onClick={() => openRateSheetExport(c)}
+                            className="p-2 rounded-xl bg-[#F8FAFC] text-[#202060] hover:bg-[#202060] hover:text-white transition-all"
+                            title="Create Rate Sheet"
+                          >
                             <ArrowRight size={16} />
                           </button>
                         </div>
@@ -220,7 +253,6 @@ export function ClientsPage() {
             )}
           </div>
           
-          {/* Footer Pagination/Info */}
           <div className="px-8 py-5 border-t border-gray-50 flex items-center justify-between">
             <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">
               Showing {filtered.length} of {clients.length} results
@@ -233,13 +265,20 @@ export function ClientsPage() {
         </div>
       </div>
 
-      {/* 4. MODAL COMPONENT */}
+      {/* Client Edit/Add Modal */}
       <ClientFormModal
         open={modalOpen}
         onClose={closeModal}
         onSave={handleSave}
         initial={editing}
         saving={createClient.isPending || updateClient.isPending}
+      />
+
+      {/* Standalone Rate Sheet PDF Exporter Modal */}
+      <ExportRateSheetModal
+        open={rateSheetModalOpen}
+        onClose={() => setRateSheetModalOpen(false)}
+        initialClient={selectedForRateSheet}
       />
     </div>
   )

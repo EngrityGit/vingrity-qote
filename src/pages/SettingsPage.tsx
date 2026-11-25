@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { Plus, Trash2, Pencil, Check, X, FolderPlus, Sparkles } from 'lucide-react'
+import { Plus, Trash2, Pencil, Check, X, FolderPlus, Sparkles, FileSpreadsheet } from 'lucide-react'
+import { ExportRateSheetModal } from '../components/Clients/ExportRateSheetModal'
 import { useRateItems, useCreateRateItem, useUpdateRateItem, useDeleteRateItem } from '../hooks/useRateItems'
 import {
   useRateCategories,
@@ -31,6 +32,7 @@ const EMPTY_ROW = {
 export function SettingsPage() {
   const { data: rates = [], isLoading } = useRateItems()
   const { data: categories = [] } = useRateCategories()
+  const [rateSheetModalOpen, setRateSheetModalOpen] = useState(false)
   const createRate = useCreateRateItem()
   const updateRate = useUpdateRateItem()
   const deleteRate = useDeleteRateItem()
@@ -83,6 +85,11 @@ export function SettingsPage() {
     setNewRow({ ...EMPTY_ROW, category_id: categoryId })
   }
 
+  <ExportRateSheetModal
+  open={rateSheetModalOpen}
+  onClose={() => setRateSheetModalOpen(false)}
+/>
+
   return (
     <div className="space-y-6">
       <div className="card p-5">
@@ -123,6 +130,20 @@ export function SettingsPage() {
           New Category
         </button>
       </div>
+
+      <div className="flex items-center gap-3 shrink-0">
+  <button 
+    onClick={() => setRateSheetModalOpen(true)} 
+    className="btn-secondary text-sm flex items-center gap-2 text-[#0071fe] border-blue-200 hover:bg-blue-50"
+  >
+    <FileSpreadsheet size={15} />
+    Download Client Rate Sheet
+  </button>
+  <button onClick={() => setAddingCategory(true)} className="btn-secondary text-sm">
+    <FolderPlus size={15} />
+    New Category
+  </button>
+</div>
 
       {addingCategory && (
         <div className="card p-4 flex items-center gap-3">
@@ -387,3 +408,4 @@ export function SettingsPage() {
     </div>
   )
 }
+
